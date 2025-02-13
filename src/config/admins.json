@@ -1,0 +1,9 @@
+{
+  "admins": [
+    {
+      "id": "admin-1",
+      "email": "dylaannp@hotmail.com",
+      "password": "$2a$10$YourPasswordIsHollanD2020"
+    }
+  ]
+}
