@@ -46,7 +46,6 @@ const testimonials = [
 export function HomePage() {
   return (
     <>
-      <Header />
       <div className="min-h-screen">
         {/* Hero Section */}
         <section className="bg-white py-20">
@@ -113,7 +112,6 @@ export function HomePage() {
           </div>
         </section>
       </div>
-      <Footer />
     </>
   );
 }

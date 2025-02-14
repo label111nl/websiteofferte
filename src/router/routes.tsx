@@ -18,6 +18,7 @@ import ResetPasswordPage from '@/pages/ResetPassword'
 import LeadsPage from '@/pages/LeadsPage'
 import { lazy } from 'react'
 import { supabase } from '@/lib/supabase'
+import MarketerDashboard from '@/pages/MarketerDashboard'
 
 
 // Root route
@@ -76,11 +77,10 @@ export const marketerRoute = createRoute({
   component: DashboardLayout,
 })
 
-import MarketerDashboard from '@/pages/MarketerDashboard'
 
 export const marketerIndexRoute = createRoute({
   getParentRoute: () => marketerRoute,
-  path: '/',
+  path: '/marketer',
   component: MarketerDashboard,
 })
 

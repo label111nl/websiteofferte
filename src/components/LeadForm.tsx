@@ -72,7 +72,7 @@ const LeadForm: React.FC<LeadFormProps> = ({ onSubmit }) => {
         <label>Prijs</label>
         <Input name="price" type="number" value={lead.price} onChange={handleChange} />
       </div>
-      <Button type="submit">Verzenden</Button>
+      <Button type="submit" className="mt-6">Verzenden</Button>
     </form>
   );
 };

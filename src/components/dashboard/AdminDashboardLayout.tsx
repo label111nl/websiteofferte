@@ -78,8 +78,8 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b">
+      Mobile header
+      <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b mr-1">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
