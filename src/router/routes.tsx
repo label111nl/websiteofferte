@@ -77,7 +77,6 @@ export const marketerRoute = createRoute({
   component: DashboardLayout,
 })
 
-
 export const marketerIndexRoute = createRoute({
   getParentRoute: () => marketerRoute,
   path: '/marketer',
