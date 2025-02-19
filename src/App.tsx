@@ -1,9 +1,9 @@
-import React from 'react';
-import { Toaster } from 'react-hot-toast';
-import { useAuthStore } from './store/authStore';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from '@tanstack/react-router';
-import { router } from './router/routes';
+import React from "react";
+import { Toaster } from "react-hot-toast";
+import { useAuthStore } from "./store/authStore";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider } from "@tanstack/react-router";
+import { router } from "./router/routes";
 
 const queryClient = new QueryClient();
 
