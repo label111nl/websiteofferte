@@ -1,22 +1,29 @@
-import React from 'react';
-import { Link, useLocation, useNavigate } from '@tanstack/react-router';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  Settings, 
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  Settings,
   LogOut,
   Menu,
   X,
   ChevronDown,
   CreditCard,
   Bell,
-  Building2
-} from 'lucide-react';
-import { useAdminAuthStore } from '@/store/adminAuthStore';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { NotificationBell } from '../NotificationBell';
+  Building2,
+} from "lucide-react";
+import { useAdminAuthStore } from "@/store/adminAuthStore";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { NotificationBell } from "../NotificationBell";
+import { LeadTable } from "./LeadTable";
+import { useLeads } from "@/hooks/queries/useLeads";
+import { Lead } from "@/types";
+import { supabase } from "@/lib/supabase";
+import { useQueryClient } from "@tanstack/react-query";
+import formatDateToUpdate, { formatDate } from "@/lib/utils";
+import Loader from "../ui/loader";
 
 interface AdminDashboardLayoutProps {
   children: React.ReactNode;
@@ -27,6 +34,11 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
   const navigate = useNavigate();
   const { admin, signOut } = useAdminAuthStore();
   const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { data: leads = [] } = useLeads();
+  const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
+
+  const queryClient = useQueryClient();
 
   const navigation = [
     {
@@ -75,6 +87,113 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
   const toggleDropdown = (name: string) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
+
+  const handlePublishLead = async (
+    id: string,
+    publish: NonNullable<Lead["published"]>,
+    price: number
+  ) => {
+    const { error } = await supabase
+      .from("leads")
+      .update({
+        published: publish,
+        published_at: formatDateToUpdate(new Date()),
+        price: price,
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating lead:", error.message);
+      return;
+    }
+
+    queryClient.setQueryData<Lead[]>(
+      ["leads"],
+      (prev) =>
+        prev?.map((lead) =>
+          lead.id === id ? { ...lead, published: publish } : lead
+        ) || []
+    );
+  };
+
+  const handleCallStatusChange = async (
+    id: string,
+    status: NonNullable<Lead["call_status"]>
+  ) => {
+    const { error } = await supabase
+      .from("leads")
+      .update({
+        call_status: status,
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating lead:", error.message);
+      return;
+    }
+
+    queryClient.setQueryData<Lead[]>(
+      ["leads"],
+      (prev) =>
+        prev?.map((lead) =>
+          lead.id === id ? { ...lead, call_status: status } : lead
+        ) || []
+    );
+  };
+
+
+  const handleStatusChange = async (
+    id: string,
+    status: NonNullable<Lead["status"]>
+  ) => {
+    console.log(id,status,"ID HBERE ID ")
+    const { error } = await supabase
+      .from("leads")
+      .update({
+        status: status,
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating lead:", error.message);
+      return;
+    }
+
+    queryClient.setQueryData<Lead[]>(
+      ["leads"],
+      (prev) =>
+        prev?.map((lead) =>
+          lead.id === id ? { ...lead, status: status } : lead
+        ) || []
+    );
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    if (leads.length > 0) {
+      setFilteredLeads(leads);
+      setLoading(false);
+    }
+  }, [leads]);
+
+  useEffect(() => {
+    const filterLeads = () => {
+      if (location.search) {
+        const tab = new URLSearchParams(location.search).get("tab");
+        if (tab === "pending") {
+          setFilteredLeads(leads.filter((lead) => lead.status === "pending"));
+        } else if (tab === "approved") {
+          setFilteredLeads(leads.filter((lead) => lead.status === "approved"));
+        } else if (tab === "rejected") {
+          setFilteredLeads(leads.filter((lead) => lead.status === "rejected"));
+        } else {
+          setFilteredLeads(leads);
+        }
+      }
+    };
+
+    filterLeads();
+  }, [location]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -256,7 +375,6 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
           </div>
         </div>
       </div>
-
       {/* Main content */}
       <div className="lg:pl-64">
         <header className="bg-white shadow-sm">
@@ -272,7 +390,22 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
           </div>
         </header>
         <main className="p-6">
-          {children}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6">
+              <h2 className="text-lg font-semibold mb-4">Recent Leads</h2>
+              {loading ? (
+                <Loader />
+              ) : (
+                <LeadTable
+                  leads={filteredLeads || []}
+                  onCallStatusChange={handleCallStatusChange}
+                  onPublishLead={handlePublishLead}
+                  isAdmin
+                  onStatusChange={handleStatusChange}
+                />
+              )}
+            </div>
+          </div>
         </main>
       </div>
     </div>

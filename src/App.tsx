@@ -4,6 +4,7 @@ import { useAuthStore } from "./store/authStore";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { router } from "./router/routes";
+import Loader from "./components/ui/loader";
 
 const queryClient = new QueryClient();
 
@@ -16,9 +17,7 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <Loader />
     );
   }
 

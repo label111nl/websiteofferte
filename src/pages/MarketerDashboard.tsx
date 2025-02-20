@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import { Link } from '@tanstack/react-router';
-import { 
-  ArrowUpRight, 
-  TrendingUp, 
-  Users, 
+import {
+  ArrowUpRight,
+  TrendingUp,
+  Users,
   FileText,
   AlertCircle,
   ChevronRight,
@@ -45,7 +45,6 @@ export default function MarketerDashboard() {
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const { data: leads = [] } = useLeads();
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -54,7 +53,7 @@ export default function MarketerDashboard() {
 
   const fetchDashboardData = async () => {
     if (!user) return;
-    
+
     try {
       // Fetch user's credits
       const { data: userData, error: userError } = await supabase
@@ -127,14 +126,14 @@ export default function MarketerDashboard() {
   const handleCallStatusChange = (id: string, status: NonNullable<Lead['call_status']>) => {
     queryClient.setQueryData<Lead[]>(['leads'], (prev) => 
       prev?.map(lead => 
-        lead.id === id ? { ...lead, call_status: status } : lead
-      ) || []
+          lead.id === id ? { ...lead, call_status: status } : lead
+        ) || []
     );
   };
 
   if (loading) {
     return <div className="flex items-center justify-center h-full">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
     </div>;
   }
 
@@ -192,7 +191,11 @@ export default function MarketerDashboard() {
           {loading ? (
             <div>Loading...</div>
           ) : (
-            <LeadTable leads={leads || []} onCallStatusChange={handleCallStatusChange} />
+            <LeadTable
+              leads={recentLeads || []}
+              onCallStatusChange={handleCallStatusChange}
+              isAdmin={false}
+            />
           )}
         </div>
       </div>
