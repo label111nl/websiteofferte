@@ -13,7 +13,7 @@ import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import SettingsPage from "@/pages/SettingsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import AdminLogin from "@/pages/AdminLogin";
-// import AdminDashboardLayout from "@/components/dashboard/AdminDashboardLayout";
+import AdminDashboardLayout from "@/components/dashboard/AdminDashboardLayout";
 import CreditsPage from "@/pages/CreditsPage";
 import QuotePage from "@/pages/QuotePage";
 import OnboardingPage from "@/pages/OnboardingPage";
@@ -59,8 +59,7 @@ export const forgotPasswordRoute = createRoute({
 export const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin",
-  component: lazy(() => import("@/components/dashboard/AdminDashboardLayout")),
-  
+  component: AdminDashboardLayout,
 });
 
 export const adminLoginRoute = createRoute({
