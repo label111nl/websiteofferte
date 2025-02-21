@@ -60,8 +60,7 @@ export default function MarketerDashboard() {
         .select("credits")
         .eq("id", user.id)
         .single(); // Use .single() to get a single record
-   
-        console.log(credits, "PURCHASES")
+
       if (userError) throw userError;
 
       // Fetch lead purchases
