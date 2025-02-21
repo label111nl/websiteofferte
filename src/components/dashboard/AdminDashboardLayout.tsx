@@ -12,6 +12,8 @@ import {
   CreditCard,
   Bell,
   Building2,
+  DollarSign,
+  BarChart3,
 } from "lucide-react";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -24,9 +26,19 @@ import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import formatDateToUpdate, { formatDate } from "@/lib/utils";
 import Loader from "../ui/loader";
+import { CreditSystem } from "./CreditSystem";
+import toast from "react-hot-toast";
+import { useAuthStore } from "@/store/authStore";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui";
 
 interface AdminDashboardLayoutProps {
   children: React.ReactNode;
+}
+
+interface Stats {
+  totalLeads: number;
+  totalSpent: number;
+  conversionRate: number;
 }
 
 export default function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
@@ -37,8 +49,15 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
   const [loading, setLoading] = useState(true);
   const { data: leads = [] } = useLeads();
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
-
+  const [credits, setCredits] = useState<number>(0)
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const [stats, setStats] = useState<Stats>({
+      totalLeads: 0,
+      totalSpent: 0,
+      conversionRate: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   const navigation = [
     {
@@ -104,6 +123,7 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
 
     if (error) {
       console.error("Error updating lead:", error.message);
+      toast.success('Error updating lead');
       return;
     }
 
@@ -114,6 +134,7 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
           lead.id === id ? { ...lead, published: publish } : lead
         ) || []
     );
+    toast.success('Lead is published successfully');
   };
 
   const handleCallStatusChange = async (
@@ -146,11 +167,11 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
     id: string,
     status: NonNullable<Lead["status"]>
   ) => {
-    console.log(id,status,"ID HBERE ID ")
     const { error } = await supabase
       .from("leads")
       .update({
         status: status,
+        // approved_at: formatDateToUpdate(new Date()),
       })
       .eq("id", id);
 
@@ -194,6 +215,67 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
 
     filterLeads();
   }, [location]);
+
+   const fetchDashboardData = async () => {
+     if (!user) return;
+     setLoadingStats(true);
+     try {
+       // Fetch user's credits
+        const { data: credits, error: userError } = await supabase
+         .from("users")
+         .select("credits")
+         .eq("id", user.id)
+         .single(); // Use .single() to get a single record
+    
+         console.log(credits, "PURCHASES")
+       if (userError) throw userError;
+       
+       // Fetch lead purchases
+       const { data: purchases, error: purchasesError } = await supabase
+         .from('lead_purchases')
+         .select('*')
+         .eq('user_id', user.id);
+ 
+       if (purchasesError) throw purchasesError;
+ 
+       // Fetch quotes
+       const { data: quotes, error: quotesError } = await supabase
+         .from('quotes')
+         .select('*, leads(*)')
+         .eq('marketer_id', user.id)
+         .order('created_at', { ascending: false });
+ 
+       if (quotesError) throw quotesError;
+ 
+ 
+      //  Calculate stats
+       const totalLeads = leads?.length;
+       const totalSpent = totalLeads * 2; // 2 credits per lead
+       const successfulQuotes = quotes?.filter(q => q.status === 'accepted').length || 0;
+       const conversionRate = totalLeads > 0 ? (successfulQuotes / totalLeads) * 100 : 0;
+ 
+       setStats({
+         totalLeads,
+         totalSpent,
+         conversionRate,
+       });
+
+      setCredits(credits?.credits || 0)
+     } catch (error) {
+       console.error('Error fetching dashboard data:', error);
+     } finally {
+      //  setLoading(false);
+       setLoadingStats(false);
+     }
+   };
+ 
+   useEffect(() => {
+    if (user && leads && leads.length > 0) {
+      fetchDashboardData();
+    }
+  }, [user, leads]);
+
+   console.log(stats, "HERE")
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -390,7 +472,58 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
           </div>
         </header>
         <main className="p-6">
-          <div className="bg-white rounded-lg shadow">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <CreditSystem credits={credits} loading={loadingStats}/>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Totaal Leads</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{loadingStats ?  
+                          <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600" />
+                           : stats.totalLeads}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {stats.totalSpent} credits uitgegeven
+                      </p>
+                    </CardContent>
+                  </Card>
+          
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Conversie</CardTitle>
+                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                      {loadingStats ?  
+                          <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600" />
+                           : stats.conversionRate.toFixed(2) + "%"}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Van leads naar klanten
+                      </p>
+                    </CardContent>
+                  </Card>
+          
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">ROI</CardTitle>
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{loadingStats ?  
+                          <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600" />
+                           : '€' +(stats.totalSpent * 75).toFixed(2)}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Geschatte waarde
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+  
+          <div className="bg-white rounded-lg shadow mt-[15px]">
             <div className="p-6">
               <h2 className="text-lg font-semibold mb-4">Recent Leads</h2>
               {loading ? (
@@ -411,3 +544,5 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
     </div>
   );
 }
+
+

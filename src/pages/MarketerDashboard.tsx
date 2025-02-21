@@ -24,7 +24,6 @@ import { TransactionHistory } from "@/components/credits/TransactionHistory";
 import { CreditSystem } from '@/components/dashboard/CreditSystem'
 import { PurchaseAnalytics } from '@/components/dashboard/PurchaseAnalytics'
 import { LeadTable } from '@/components/dashboard/LeadTable'
-import { useLeads } from '@/hooks/queries/useLeads'
 import { useQueryClient } from '@tanstack/react-query';
 
 interface Stats {
@@ -56,12 +55,13 @@ export default function MarketerDashboard() {
 
     try {
       // Fetch user's credits
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('credits')
-        .eq('id', user.id)
-        .single();
-
+       const { data: credits, error: userError } = await supabase
+        .from("users")
+        .select("credits")
+        .eq("id", user.id)
+        .single(); // Use .single() to get a single record
+   
+        console.log(credits, "PURCHASES")
       if (userError) throw userError;
 
       // Fetch lead purchases
@@ -83,18 +83,17 @@ export default function MarketerDashboard() {
 
       // Fetch recent leads
       const { data: recentLeads, error: leadsError } = await supabase
-        .from('leads')
-        .select('*')
-        .eq('status', 'approved')
-        .eq('published', true)
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .from("leads")
+        .select("*")
+        .eq("published", true)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
 
       if (leadsError) throw leadsError;
 
       // Calculate stats
-      const totalLeads = purchases?.length || 0;
-      const totalSpent = (purchases?.length || 0) * 2; // 2 credits per lead
+      const totalLeads = recentLeads?.length;
+      const totalSpent = totalLeads * 2; // 2 credits per lead
       const successfulQuotes = quotes?.filter(q => q.status === 'accepted').length || 0;
       const conversionRate = totalLeads > 0 ? (successfulQuotes / totalLeads) * 100 : 0;
 
@@ -102,7 +101,7 @@ export default function MarketerDashboard() {
         totalLeads,
         totalSpent,
         conversionRate,
-        credits: userData?.credits || 0
+        credits: credits?.credits || 0
       });
       setRecentLeads(recentLeads || []);
     } catch (error) {
@@ -140,7 +139,7 @@ export default function MarketerDashboard() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <CreditSystem />
+        <CreditSystem credits={stats.credits} />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Totaal Leads</CardTitle>

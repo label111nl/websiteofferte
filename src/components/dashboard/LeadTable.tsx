@@ -20,6 +20,7 @@ import {
 import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { Input } from "../ui";
+import { useCredits } from '@/hooks/useCredits';
 
 interface LeadTableProps {
   leads: Lead[];
@@ -48,10 +49,17 @@ export function LeadTable({
   onCallStatusChange,
   onPublishLead,
   isAdmin,
-}: LeadTableProps) {
+}: LeadTableProps) { 
   const navigate = useNavigate();
   const [priceLead, setPriceLead] = React.useState<string>("");
   const [priceModal, setPriceModal] = React.useState<IPriceModal | null>(null);
+
+  const { deductCredits } = useCredits()
+
+  const reloadPage = () => {
+    window.location.reload();
+  };
+  
 
   const columns = React.useMemo<ColumnDef<Lead>[]>(() => [
       {
@@ -174,6 +182,7 @@ export function LeadTable({
                     size="sm"
                   onClick={() => onStatusChange(lead.id, 'approved')}
                     className="text-green-600 hover:text-green-700"
+                    disabled={!lead.published}
                   >
                     <CheckCircle className="h-4 w-4" />
                   </Button>
@@ -182,6 +191,7 @@ export function LeadTable({
                     size="sm"
                   onClick={() => onStatusChange(lead.id, 'rejected')}
                     className="text-red-600 hover:text-red-700"
+                    disabled={!lead.published}
                   >
                     <XCircle className="h-4 w-4" />
                   </Button>
@@ -196,12 +206,12 @@ export function LeadTable({
             {
               id: "publish",
               header: "Publish",
-              cell: ({ row }) => {
+              cell: ({ row }: { row: any }) => {
                 const lead = row.original;
                 return (
                   <>
                     <Button
-                      size="sm"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
                       onClick={() => {
                         setPriceModal({
                           leadId: lead.id,
@@ -217,7 +227,42 @@ export function LeadTable({
               },
             },
           ]
-        : []),
+        : [
+            {
+              id: "price",
+              header: "Price",
+              cell: ({ row }: { row: any }) => {
+                const lead = row.original;
+                return (
+                  <p>
+                    {lead.price}
+                  </p>
+                );
+              },
+            },
+            {
+              id: "buy",
+              header: "Buy",
+              cell: ({ row }: { row: any }) => {
+                const lead = row.original;
+                return (
+                  <>
+                    <Button
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                      onClick={async () => {
+                        const bougth = await deductCredits(lead.price);
+                        if(bougth === 'success') {
+                          reloadPage()
+                        }
+                      }}
+                    >
+                      Buy
+                    </Button>
+                  </>
+                );
+              },
+            },
+          ]),
     ],
     [navigate, isAdmin, onStatusChange, onCallStatusChange, onPublishLead]
   );
@@ -261,89 +306,115 @@ export function LeadTable({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
           {table.getHeaderGroups().map(headerGroup => (
-            <tr key={headerGroup.id}>
+              <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => (
-                <th
-                  key={header.id}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+                  <th
+                    key={header.id}
+                    className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
           {table.getRowModel().rows.map(row => (
-            <tr key={row.id} className="hover:bg-gray-50">
+              <tr key={row.id} className="hover:bg-gray-50">
               {row.getVisibleCells().map(cell => (
-                <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <Dialog.Root open={priceModal?.open}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded shadow-lg">
+                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <Dialog.Root open={priceModal?.open}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-black/50" />
+            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded shadow-lg">
             <Dialog.Title className="text-lg font-bold">Set price</Dialog.Title>
-            <Input
-              name="price"
-              placeholder="Price in Credits"
-              value={priceLead}
-              onChange={(e) => {
-                const numericValue = e.target.value.replace(/[^0-9]/g, "");
-                setPriceLead(numericValue);
-              }}
-            />
-            <div className="mt-4 flex justify-between">
-              <Button
-                size="sm"
-                onClick={() => {
-                  onPublishLead?.(priceModal!.leadId, true, Number(priceLead));
-                  setPriceModal(null);
+              <Input
+                name="price"
+                placeholder="Price in Credits"
+                value={priceLead}
+                onChange={(e) => {
+                  const numericValue = e.target.value.replace(/[^0-9]/g, "");
+                  setPriceLead(numericValue);
                 }}
-                disabled={!priceLead}
-              >
-                Publish
-              </Button>
+              />
+              <div className="mt-4 flex justify-between">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                  onPublishLead?.(priceModal!.leadId, true, Number(priceLead));
+                    setPriceModal(null);
+                  }}
+                  disabled={!priceLead}
+                >
+                  Publish
+                </Button>
+                <Dialog.Close asChild>
+                  <button
+                    onClick={() => {
+                      setPriceLead("");
+                      setPriceModal(null);
+                    }}
+                    className="px-4 py-2 bg-gray-200 rounded"
+                  >
+                    Close
+                  </button>
+                </Dialog.Close>
+              </div>
+
               <Dialog.Close asChild>
                 <button
                   onClick={() => {
                     setPriceLead("");
                     setPriceModal(null);
                   }}
-                  className="px-4 py-2 bg-gray-200 rounded"
+                  className="absolute top-2 right-2"
                 >
-                  Close
+                  <Cross2Icon />
                 </button>
               </Dialog.Close>
-            </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </div>
+      <div className="w-full border-none flex justify-center items-center mt-[15px] px-[24px]">
+        <Button
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+        >
+          Previous
+        </Button>
 
-            <Dialog.Close asChild>
-              <button
-                onClick={() => {
-                  setPriceLead("");
-                  setPriceModal(null);
-                }}
-                className="absolute top-2 right-2"
-              >
-                <Cross2Icon />
-              </button>
-            </Dialog.Close>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-    </div>
+        <span className="w-[130px] flex justify-center">
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount()}
+        </span>
+
+        <Button
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+        >
+          Next
+        </Button>
+      </div>
+    </>
   );
 }

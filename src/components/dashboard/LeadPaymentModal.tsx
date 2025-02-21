@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, CreditCard, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/contexts/UserContext';
-import { useCredits } from './CreditSystem';
 import { toast } from 'react-hot-toast';
 import {
   Dialog,
@@ -14,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertProps } from '@/components/ui/alert';
+import { useCredits } from '@/hooks/useCredits';
 
 interface LeadPaymentModalProps {
   leadId: string;
@@ -32,7 +32,36 @@ export default function LeadPaymentModal({
 }: LeadPaymentModalProps) {
   const [loading, setLoading] = React.useState(false);
   const { user } = useUser();
-  const { credits, deductCredits, hasEnoughCredits } = useCredits();
+  const { deductCredits, hasEnoughCredits } = useCredits();
+  const [credits, setCredits] = React.useState<number>(0);
+
+  const fetchCredits = async () => {
+    if (!user?.id) return;
+     setLoading(true)
+     const { data, error } = await supabase
+       .from("users")
+       .select("credits")
+       .eq("id", user.id) 
+       .single();
+ 
+     if (error) {
+       console.error("Error fetching user data:", error.message);
+       setLoading(false);
+       return;
+     }
+     setLoading(false)
+     return data.credits
+    };
+
+    useEffect(() => {
+      if (user) {
+        fetchCredits().then((credits) => {
+          if (credits !== null) {
+            setCredits(credits);
+          }
+        });
+      }
+    }, [user]);
 
   const handlePurchase = async () => {
     if (!user) return;
