@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button'
 import { CreditCard, Package } from 'lucide-react'
 
 const CREDIT_PACKAGES = [
-  { id: 'small', credits: 10, price: 50, popular: false },
-  { id: 'medium', credits: 25, price: 100, popular: true },
-  { id: 'large', credits: 50, price: 175, popular: false },
+  { id: 'credit-5', credits: 10, price: 50, popular: false },
+  { id: 'credit-20', credits: 25, price: 100, popular: true },
+  { id: 'credit-50', credits: 50, price: 175, popular: false },
 ]
 
 interface CreditPurchaseModalProps {
@@ -27,7 +27,7 @@ export function CreditPurchaseModal({ open, onClose }: CreditPurchaseModalProps)
     try {
       // Create Stripe checkout session
       const { data: session, error: sessionError } = await supabase
-        .functions.invoke('create-checkout-session', {
+        .rpc('create_checkout_session', {
           body: {
             packageId,
             userId: user.id,
@@ -51,7 +51,7 @@ export function CreditPurchaseModal({ open, onClose }: CreditPurchaseModalProps)
       if (transactionError) throw transactionError
 
       // Redirect to Stripe
-      window.location.href = session.url
+      // window.location.href = session.url
     } catch (error) {
       console.error('Purchase error:', error)
     } finally {

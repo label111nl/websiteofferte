@@ -1,20 +1,20 @@
 import React from 'react';
-import { Outlet } from '@tanstack/react-router';
+import { Outlet, useLocation } from '@tanstack/react-router';
 import Header from './Header';
 import Footer from './Footer';
 
-interface PublicLayoutProps {
-  children: React.ReactNode;
-}
+const PublicLayout: React.FC = () => {
+  const location = useLocation();
 
-const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
+  const shouldShowHeaderFooter = !location.pathname.includes('admin') && !location.pathname.includes('dashboard');
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      {shouldShowHeaderFooter && <Header />}
       <main className="flex-grow">
         <Outlet />
       </main>
-      <Footer />
+      {shouldShowHeaderFooter && <Footer />}
     </div>
   );
 };

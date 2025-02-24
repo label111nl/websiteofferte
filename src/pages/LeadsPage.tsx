@@ -28,13 +28,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Euro, Filter, Clock, Building, CreditCard } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useTable } from '@/lib/table'
-import type { ColumnDef, CellContext } from '@tanstack/react-table'
-import { DataTable } from '@/components/ui/data-table'
-import { useLeads, useUpdateLead } from '@/hooks/queries/useLeads'
-import { formatDate } from '@/lib/utils'
-import { CreditPurchaseModal } from '@/components/credits/CreditPurchaseModal'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTable } from '@/lib/table';
+import type { ColumnDef, CellContext } from '@tanstack/react-table';
+import { DataTable } from '@/components/ui/data-table';
+import { formatDate } from '@/lib/utils';
+import { CreditPurchaseModal } from '@/components/credits/CreditPurchaseModal';
+import Loader from '@/components/ui/loader';
 
 interface SearchParams {
   tab: 'available' | 'my-leads';
@@ -79,109 +79,58 @@ export default function LeadsPage() {
   const { user } = useAuthStore();
   const [availableLeads, setAvailableLeads] = React.useState<Lead[]>([]);
   const [myLeads, setMyLeads] = React.useState<Quote[]>([]);
-  const [loading, setLoading] = React.useState(true);
   const [credits, setCredits] = useState(0);
   const [purchasingLead, setPurchasingLead] = useState<string | null>(null);
-  const queryClient = useQueryClient()
-  const [filters, setFilters] = useState({})
-  const [sort, setSort] = useState({ field: 'created_at', direction: 'desc' })
-  const [showCreditModal, setShowCreditModal] = useState(false)
+  const queryClient = useQueryClient();
+  const [filters, setFilters] = useState({});
+  const [sort, setSort] = useState({ field: 'created_at', direction: 'desc' });
+  const [showCreditModal, setShowCreditModal] = useState(false);
 
   const currentTab = search.tab || 'available';
 
-  const { data: leads } = useQuery({
+  // Fetch leads using useQuery
+  const { data: leads, isLoading: isLeadsLoading } = useQuery({
     queryKey: ['leads'],
-    queryFn: fetchLeads
-  })
+    queryFn: fetchLeads,
+  });
 
+  // Update lead mutation
   const updateLead = useMutation({
     mutationFn: updateLeadFn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
     }
-  })
+  });
 
-  const columns: ColumnDef<Lead>[] = [
-    {
-      accessorKey: 'title',
-      header: 'Title',
-      cell: (info: LeadTableCell) => (
-        <div className="font-medium">{info.getValue()}</div>
-      ),
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: (info: LeadTableCell) => (
-        <Badge variant={info.getValue() === 'approved' ? 'success' : 'secondary'}>
-          {info.getValue()}
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: 'created_at',
-      header: 'Created',
-      cell: (info: LeadTableCell) => formatDate(info.getValue()),
-    },
-    {
-      id: 'actions',
-      cell: (info: LeadTableCell) => {
-        const lead = info.row.original;
-        return (
-          <div className="flex space-x-2">
-            <Button variant="ghost" onClick={() => handleViewLead(lead.id)}>
-              View Details
-            </Button>
-            {user && user.role === 'admin' && (
-              <>
-                <Button variant="ghost" onClick={() => handleEditLead(lead.id)}>
-                  Edit
-                </Button>
-                <Button variant="ghost" onClick={() => handleDeleteLead(lead.id)}>
-                  Delete
-                </Button>
-              </>
-            )}
-          </div>
-        );
-      },
-    },
-  ]
-
-  const table = useTable({
-    data: leads ?? [],
-    columns,
-  })
-
+  // Fetch user credits on mount
   useEffect(() => {
-    fetchLeads();
+    const fetchCredits = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('credits')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+        setCredits(data.credits || 0);
+      } catch (error) {
+        toast.error('Error fetching credits');
+      }
+    };
+
     fetchCredits();
-  }, []);
+  }, [user]);
 
-  const fetchCredits = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('credits')
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-      setCredits(data.credits || 0);
-    } catch (error) {
-      toast.error('Error fetching credits');
-    }
-  };
-
+  // Handle filter changes
   const handleFilterChange = (filters: {
     search: string;
     budgetRange: string;
     timeline: string;
   }) => {
-    // Filter leads based on search criteria
-    const filteredLeads = availableLeads.filter(lead => {
+    const filteredLeads = (leads ?? []).filter(lead => {
       const matchesSearch = !filters.search || (
         lead.company_name?.toLowerCase().includes(filters.search.toLowerCase()) ||
         lead.project_description?.toLowerCase().includes(filters.search.toLowerCase())
@@ -196,6 +145,7 @@ export default function LeadsPage() {
     setAvailableLeads(filteredLeads);
   };
 
+  // Handle lead purchase
   const handlePurchaseLead = async (leadId: string) => {
     if (!user) return;
     
@@ -209,7 +159,6 @@ export default function LeadsPage() {
 
     setPurchasingLead(leadId);
     try {
-      // Start transaction
       const { error: purchaseError } = await supabase
         .from('lead_purchases')
         .insert([
@@ -222,7 +171,6 @@ export default function LeadsPage() {
 
       if (purchaseError) throw purchaseError;
 
-      // Update user credits
       const { error: creditError } = await supabase
         .from('users')
         .update({ credits: credits - lead.price })
@@ -240,31 +188,14 @@ export default function LeadsPage() {
     }
   };
 
-  const handleUpdate = async (id: string, data: Partial<Lead>) => {
-    await updateLead.mutateAsync({ 
-      id, 
-      ...data
-    });
-  };
-
+  // Handle view lead
   const handleViewLead = (id: string) => {
     navigate({ to: `/leads/${id}` });
   };
 
-  const handleEditLead = (id: string) => {
-    // Implement edit lead functionality
-  };
-
-  const handleDeleteLead = (id: string) => {
-    // Implement delete lead functionality
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+  // Render loader if data is still loading
+  if (isLeadsLoading) {
+    return <Loader />;
   }
 
   return (
@@ -298,34 +229,11 @@ export default function LeadsPage() {
               </div>
             </div>
 
-            <div className="flex gap-4 items-center">
-              <Select>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Budget" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">€1000 - €5000</SelectItem>
-                  <SelectItem value="medium">€5000 - €10000</SelectItem>
-                  <SelectItem value="high">€10000+</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Type Project" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="website">Website</SelectItem>
-                  <SelectItem value="webshop">Webshop</SelectItem>
-                  <SelectItem value="application">Applicatie</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             <LeadFilters 
-              onFilterChange={setFilters}
+              onFilterChange={handleFilterChange}
               onSortChange={setSort}
             />
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {availableLeads.map((lead) => (
                 <Card key={lead.id}>
@@ -414,15 +322,6 @@ export default function LeadsPage() {
           </div>
         </TabsContent>
       </Tabs>
-
-      <DataTable 
-        table={table}
-        searchKey="title"
-        showPagination
-        data={leads ?? []}
-        onUpdate={handleUpdate}
-        isUpdating={updateLead.isPending}
-      />
 
       <CreditPurchaseModal 
         open={showCreditModal}

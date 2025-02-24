@@ -12,7 +12,7 @@ export default function PrivateRoute({ children, adminOnly }: PrivateRouteProps)
   const { user, isLoading: userLoading } = useAuthStore();
   const { admin, isLoading: adminLoading } = useAdminAuthStore();
   const location = useLocation();
-
+  
   // Show loading spinner during authentication checks
   if (userLoading || adminLoading) {
     return (

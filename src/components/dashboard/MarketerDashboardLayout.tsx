@@ -77,7 +77,7 @@ export default function MarketerDashboardLayout({ children }: MarketerDashboardL
   // };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen">
       {/* Mobile header */}
       {/* <div className="sm:hidden flex items-center justify-between p-4 bg-white border-b">
         <Sheet>

@@ -17,13 +17,18 @@ import AdminDashboardLayout from "@/components/dashboard/AdminDashboardLayout";
 import CreditsPage from "@/pages/CreditsPage";
 import QuotePage from "@/pages/QuotePage";
 import OnboardingPage from "@/pages/OnboardingPage";
-import LeadDetailsPage from "@/pages/LeadDetailsPage";
 import VerifyEmailPage from "@/pages/auth/VerifyEmail";
 import ResetPasswordPage from "@/pages/ResetPassword";
 import LeadsPage from "@/pages/LeadsPage";
 import { lazy } from "react";
 import { supabase } from "@/lib/supabase";
 import MarketerDashboardLayout from "@/components/dashboard/MarketerDashboardLayout";
+import NotificationsPage from "@/pages/settings/NotificationsPage";
+import PortfolioPage from "@/pages/settings/PortfolioPage";
+import CompanyPage from "@/pages/settings/CompanyPage";
+import InvoicesPage from "@/pages/financial/InvoicesPage";
+import TransactionsPage from "@/pages/financial/TransactionsPage";
+import Onboarding from "@/pages/onboarding";
 
 // Root route
 export const rootRoute = createRootRoute({
@@ -176,7 +181,7 @@ export const marketerSettingsRoute = createRoute({
 
 export const marketerProfileRoute = createRoute({
   getParentRoute: () => dashboardRoute,
-  path: "/profile",
+  path: "settings/profile",
   component: ProfilePage,
 });
 
@@ -186,11 +191,55 @@ export const marketerCreditsRoute = createRoute({
   component: CreditsPage,
 });
 
+export const marketerInvoicesRoute = createRoute({
+  getParentRoute: () => dashboardRoute,
+  path: "/financial/invoices",
+  component: InvoicesPage,
+});
+
+export const marketerTransactionsRoute = createRoute({
+  getParentRoute: () => dashboardRoute,
+  path: "/financial/transactions",
+  component: TransactionsPage,
+});
+
+
 export const marketerOnboardingRoute = createRoute({
   getParentRoute: () => dashboardRoute,
   path: "/onboarding",
   component: OnboardingPage,
 });
+
+export const marketerSettingsNotification = createRoute({
+  getParentRoute: () => dashboardRoute,
+  path: "/settings/notifications",
+  component: NotificationsPage,
+});
+
+export const marketerSettingsPortfolio = createRoute({
+  getParentRoute: () => dashboardRoute,
+  path: "/settings/portfolio",
+  component: PortfolioPage,
+});
+
+export const marketerSettingsCompany = createRoute({
+  getParentRoute: () => dashboardRoute,
+  path: "/settings/company",
+  component: CompanyPage,
+});
+
+export const marketerAnanlytics = createRoute({
+  getParentRoute: () => dashboardRoute,
+  path: "/analytics",
+  component: Onboarding, // TODO: ask about this
+});
+
+export const marketerLeads = createRoute({
+  getParentRoute: () => dashboardRoute,
+  path: "/leads",
+  component: LeadsPage,
+});
+
 
 // Then build the route tree
 export const routeTree = rootRoute.addChildren([
@@ -204,10 +253,17 @@ export const routeTree = rootRoute.addChildren([
   dashboardRoute.addChildren([
     marketerIndexRoute,
     marketerSettingsRoute,
+    marketerSettingsNotification,
+    marketerSettingsPortfolio,
+    marketerSettingsCompany,
     marketerProfileRoute,
     marketerCreditsRoute,
     marketerOnboardingRoute,
     leadDetailsRoute,
+    marketerInvoicesRoute,
+    marketerTransactionsRoute,
+    marketerAnanlytics,
+    marketerLeads
   ]),
   sharedLeadsRoute,
   sharedLeadDetailsRoute,
@@ -230,10 +286,17 @@ export const router = createRouter({
     dashboardRoute.addChildren([
       marketerIndexRoute,
       marketerSettingsRoute,
+      marketerSettingsNotification,
+      marketerSettingsPortfolio,
+      marketerSettingsCompany,  // Now with a unique path
       marketerProfileRoute,
       marketerCreditsRoute,
       marketerOnboardingRoute,
       leadDetailsRoute,
+      marketerInvoicesRoute,
+      marketerTransactionsRoute,
+      marketerAnanlytics,
+      marketerLeads
     ]),
     sharedLeadsRoute,
     sharedLeadDetailsRoute,

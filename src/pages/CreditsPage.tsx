@@ -7,30 +7,27 @@ import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 
 const CREDIT_PACKAGES = [
-  { id: 'small', credits: 10, price: 50, popular: false },
-  { id: 'medium', credits: 25, price: 100, popular: true },
-  { id: 'large', credits: 50, price: 175, popular: false },
+  { id: 'credit-5', credits: 10, price: 50, popular: false },
+  { id: 'credit-20', credits: 25, price: 100, popular: true },
+  { id: 'credit-50', credits: 50, price: 175, popular: false },
 ] 
 
 export default function CreditsPage() {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handlePurchase = async (packageId: string, amount: number) => {
+  const handlePurchase = async (packageId: string) => {
     if (!user) return
     setLoading(packageId)
 
     try {
-      // Create Stripe checkout session
-      const { data: session, error: sessionError } = await supabase
-        .functions.invoke('create_checkout_session', {
-          body: {
-            packageId,
-            userId: user.id,
-            credits: amount
-          }
-        })
-     console.log(sessionError)
+      let { data: session, error: sessionError } = await supabase.functions.invoke(
+        'create-checkout-session',
+        {
+          body: { packageId },
+        }
+      );
+      
       if (sessionError) throw sessionError
 
       // Record transaction
@@ -43,11 +40,12 @@ export default function CreditsPage() {
           status: 'pending',
           stripe_session_id: session.id
         })
+        console.log(transactionError, "SECOND")
 
       if (transactionError) throw transactionError
-
+       console.log(session, "FIRST")
       // Redirect to Stripe
-      window.location.href = session.url
+      // window.location.href = session.url
     } catch (error) {
       toast.error('Error initiating purchase');
     } finally {
@@ -71,7 +69,7 @@ export default function CreditsPage() {
               <p className="text-2xl font-bold">€{pkg.price}</p>
               <Button 
                 className="w-full mt-4"
-                onClick={() => handlePurchase(pkg.id, pkg.credits)}
+                onClick={() => handlePurchase(pkg.id)}
                 disabled={loading === pkg.id}
               >
                 {loading === pkg.id ? 'Processing...' : 'Purchase'}
