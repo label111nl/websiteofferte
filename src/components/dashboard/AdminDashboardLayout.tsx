@@ -58,7 +58,7 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
       conversionRate: 0,
   });
   const [loadingStats, setLoadingStats] = useState(true);
-
+ 
   const navigation = [
     {
       name: 'Dashboard',
@@ -279,7 +279,6 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
 
   return (
     <div className="min-h-screen bg-gray-100">
-      Mobile header
       <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b mr-1">
         <Sheet>
           <SheetTrigger asChild>
@@ -459,7 +458,7 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
       </div>
       {/* Main content */}
       <div className="lg:pl-64">
-        <header className="bg-white shadow-sm">
+        <header className="hidden lg:block bg-white shadow-sm">
           <div className="flex items-center justify-between px-4 py-4">
             <div className="flex items-center">
               <h1 className="text-lg font-semibold text-gray-900">

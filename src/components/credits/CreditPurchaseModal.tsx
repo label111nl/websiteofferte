@@ -13,7 +13,7 @@ const CREDIT_PACKAGES = [
 
 interface CreditPurchaseModalProps {
   open: boolean
-  onClose: () => void
+  onClose?: () => void
 }
 
 export function CreditPurchaseModal({ open, onClose }: CreditPurchaseModalProps) {

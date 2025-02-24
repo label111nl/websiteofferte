@@ -15,7 +15,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="lg:pl-[200px] pl-0 bg-white shadow-sm">
+    <header className="lg:pl-[250px] pl-0 bg-white shadow-sm">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between h-16" style={{ marginLeft: '5%' }}>
           <div className="flex items-center">

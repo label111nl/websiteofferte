@@ -1,84 +1,85 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from '@tanstack/react-router';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  LogOut,
-  Menu,
-  X,
-  ChevronDown,
-  CreditCard,
-  Bell,
-  Building2
-} from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { NotificationBell } from '../NotificationBell';
+// import { Link, useLocation, useNavigate } from '@tanstack/react-router';
+// import { 
+//   LayoutDashboard, 
+//   Users, 
+//   Settings, 
+//   LogOut,
+//   Menu,
+//   X,
+//   ChevronDown,
+//   CreditCard,
+//   Bell,
+//   Building2
+// } from 'lucide-react';
+// import { useAuthStore } from '@/store/authStore';
+// import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+// import { Button } from '@/components/ui/button';
+// import { NotificationBell } from '../NotificationBell';
+import MarketerDashboard from '@/pages/MarketerDashboard';
 
 interface MarketerDashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export default function MarketerDashboardLayout({ children }: MarketerDashboardLayoutProps) {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, signOut } = useAuthStore();
-  const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
+  // const location = useLocation();
+  // const navigate = useNavigate();
+  // const { user, signOut } = useAuthStore();
+  // const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
 
-  const navigation = [
-    {
-      name: 'Dashboard',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-      current: location.pathname === '/dashboard',
-    },
-    {
-      name: 'Leads',
-      icon: Users,
-      current: location.pathname.includes('/leads'),
-      dropdownItems: [
-        { name: 'Beschikbare Leads', href: '/dashboard/leads' },
-        { name: 'Mijn Leads', href: '/dashboard/leads?tab=my-leads' },
-      ]
-    },
-    {
-      name: 'Financieel',
-      icon: CreditCard,
-      current: location.pathname.includes('/financial'),
-      dropdownItems: [
-        { name: 'Abonnement', href: '/dashboard/subscription' },
-        { name: 'Facturen', href: '/dashboard/financial/invoices' },
-        { name: 'Transacties', href: '/dashboard/financial/transactions' },
-      ]
-    },
-    {
-      name: 'Instellingen',
-      icon: Settings,
-      current: location.pathname.includes('/settings'),
-      dropdownItems: [
-        { name: 'Profiel', href: '/dashboard/settings/profile' },
-        { name: 'Portfolio', href: '/dashboard/settings/portfolio' },
-        { name: 'Bedrijfsgegevens', href: '/dashboard/settings/company' },
-        { name: 'Notificaties', href: '/dashboard/settings/notifications' },
-      ]
-    },
-  ];
+  // const navigation = [
+  //   {
+  //     name: 'Dashboard',
+  //     href: '/dashboard',
+  //     icon: LayoutDashboard,
+  //     current: location.pathname === '/dashboard',
+  //   },
+  //   {
+  //     name: 'Leads',
+  //     icon: Users,
+  //     current: location.pathname.includes('/leads'),
+  //     dropdownItems: [
+  //       { name: 'Beschikbare Leads', href: '/dashboard/leads' },
+  //       { name: 'Mijn Leads', href: '/dashboard/leads?tab=my-leads' },
+  //     ]
+  //   },
+  //   {
+  //     name: 'Financieel',
+  //     icon: CreditCard,
+  //     current: location.pathname.includes('/financial'),
+  //     dropdownItems: [
+  //       { name: 'Abonnement', href: '/dashboard/subscription' },
+  //       { name: 'Facturen', href: '/dashboard/financial/invoices' },
+  //       { name: 'Transacties', href: '/dashboard/financial/transactions' },
+  //     ]
+  //   },
+  //   {
+  //     name: 'Instellingen',
+  //     icon: Settings,
+  //     current: location.pathname.includes('/settings'),
+  //     dropdownItems: [
+  //       { name: 'Profiel', href: '/dashboard/settings/profile' },
+  //       { name: 'Portfolio', href: '/dashboard/settings/portfolio' },
+  //       { name: 'Bedrijfsgegevens', href: '/dashboard/settings/company' },
+  //       { name: 'Notificaties', href: '/dashboard/settings/notifications' },
+  //     ]
+  //   },
+  // ];
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate({ to: '/login' });
-  };
+  // const handleSignOut = async () => {
+  //   await signOut();
+  //   navigate({ to: '/login' });
+  // };
 
-  const toggleDropdown = (name: string) => {
-    setOpenDropdown(openDropdown === name ? null : name);
-  };
+  // const toggleDropdown = (name: string) => {
+  //   setOpenDropdown(openDropdown === name ? null : name);
+  // };
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b">
+      {/* <div className="sm:hidden flex items-center justify-between p-4 bg-white border-b">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
@@ -180,10 +181,10 @@ export default function MarketerDashboardLayout({ children }: MarketerDashboardL
             </Link>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+      {/* <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white border-r">
           <div className="flex items-center justify-center h-16 px-4 border-b">
             <h1 className="text-xl font-bold text-gray-900">Website Offertes</h1>
@@ -263,11 +264,11 @@ export default function MarketerDashboardLayout({ children }: MarketerDashboardL
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Main content */}
-      <div className="lg:pl-64">
-        <header className="bg-white shadow-sm">
+      <div>
+        {/* <header className="lg:hidden bg-white shadow-sm">
           <div className="flex items-center justify-between px-4 py-4">
             <div className="flex items-center">
               <h1 className="text-lg font-semibold text-gray-900">
@@ -290,9 +291,9 @@ export default function MarketerDashboardLayout({ children }: MarketerDashboardL
               )}
             </div>
           </div>
-        </header>
-        <main className="p-6">
-          {children}
+        </header> */}
+        <main>
+          <MarketerDashboard />
         </main>
       </div>
     </div>

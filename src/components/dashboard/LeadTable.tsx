@@ -53,7 +53,11 @@ export function LeadTable({
   const navigate = useNavigate();
   const [priceLead, setPriceLead] = React.useState<string>("");
   const [priceModal, setPriceModal] = React.useState<IPriceModal | null>(null);
-
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0, // Default to page 1
+    pageSize: 10, // Default page size
+  });
+  
   const { deductCredits } = useCredits()
 
   const reloadPage = () => {
@@ -272,6 +276,10 @@ export function LeadTable({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    state: {
+      pagination, // Pass the controlled pagination state
+    },
+    onPaginationChange: setPagination, 
   });
 
   const getStatusColor = (status: string, published?: boolean) => {
